@@ -7,11 +7,21 @@ import { buildMetadata } from '@/lib/seo'
 
 type Props = { searchParams: Promise<{ q?: string | string[] }> }
 
-export const metadata = buildMetadata({ title: 'Search games', description: 'Search PINGOO for games, genres and platforms.', path: '/search', noIndex: true })
+const queryFrom = (searchParams: Props['searchParams']) => searchParams.then(({ q }) =>
+  (Array.isArray(q) ? q[0] : q ?? '').trim().slice(0, 100),
+)
+
+export async function generateMetadata({ searchParams }: Props) {
+  const q = await queryFrom(searchParams)
+  const title = q ? `Search results for “${q}”` : 'Search games'
+  const description = q
+    ? `Search PINGOO's game catalog for “${q}”. Results include matching games, genres, and platforms.`
+    : 'Search PINGOO’s game catalog by title, developer, publisher, genre, or platform.'
+  return buildMetadata({ title, description, path: '/search', noIndex: true })
+}
 
 export default async function SearchPage({ searchParams }: Props) {
-  const raw = (await searchParams).q
-  const q = (Array.isArray(raw) ? raw[0] : raw ?? '').slice(0, 100)
+  const q = await queryFrom(searchParams)
   const results = searchGames(q)
 
   return (
@@ -28,7 +38,7 @@ export default async function SearchPage({ searchParams }: Props) {
             <ul className="flex flex-wrap gap-3">
               {Object.entries(genres).map(([slug, g]) => (
                 <li key={slug}>
-                  <Link href={`/category/${slug}`} className="inline-flex h-11 items-center rounded-lg border border-line bg-surface px-4 font-medium hover:border-cyan hover:text-cyan">{g.name}</Link>
+                  <Link href={`/genres/${slug}`} className="inline-flex h-11 items-center rounded-lg border border-line bg-surface px-4 font-medium hover:border-cyan hover:text-cyan">{g.name}</Link>
                 </li>
               ))}
             </ul>

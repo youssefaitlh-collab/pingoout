@@ -2,23 +2,47 @@ import type { Metadata } from 'next'
 import { type Game, genres, platforms } from './games'
 
 export const SITE_NAME = 'PINGOO'
-// Netlify sets URL at build time for production; DEPLOY_PRIME_URL covers previews.
-export const SITE_URL = (process.env.URL || process.env.DEPLOY_PRIME_URL || 'http://localhost:8889').replace(/\/$/, '')
+// Netlify's URL is the canonical production domain in every deploy context.
+// Never silently emit localhost canonicals in a production build.
+const configuredSiteUrl = process.env.URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.DEPLOY_PRIME_URL
+if (process.env.NODE_ENV === 'production' && !configuredSiteUrl) {
+  throw new Error('Set URL or NEXT_PUBLIC_SITE_URL before building PINGOO for production.')
+}
+export const SITE_URL = (configuredSiteUrl || 'http://localhost:8889').replace(/\/$/, '')
+export const isPreviewDeployment = Boolean(process.env.CONTEXT && process.env.CONTEXT !== 'production')
 
-/** Optimized image through the Netlify Image CDN. */
-export const imageUrl = (file: string, w: number) => `/.netlify/images?url=/img/${file}&w=${w}&fm=webp`
+/** Use Netlify's optimizer when its runtime is present; local Next previews serve source artwork directly. */
+const netlifyImageCdnAvailable = process.env.NETLIFY === 'true' ||
+  ['production', 'deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT || '')
+
+export const imageUrl = (file: string, w: number) => netlifyImageCdnAvailable
+  ? `/.netlify/images?url=/img/${encodeURIComponent(file)}&w=${w}&fm=webp`
+  : `/img/${encodeURIComponent(file)}`
 
 type MetaInput = { title: string; description: string; path: string; image?: string; noIndex?: boolean }
 
 export function buildMetadata({ title, description, path, image, noIndex }: MetaInput): Metadata {
   const ogImage = image ? `${SITE_URL}${imageUrl(image, 1200)}` : undefined
+  const shouldNoIndex = Boolean(noIndex || isPreviewDeployment)
   return {
     title,
     description,
     alternates: { canonical: path },
-    robots: noIndex ? { index: false, follow: true } : undefined,
-    openGraph: { title, description, url: path, siteName: SITE_NAME, type: 'website', images: ogImage ? [{ url: ogImage, width: 1200 }] : undefined },
-    twitter: { card: ogImage ? 'summary_large_image' : 'summary', title, description, images: ogImage ? [ogImage] : undefined },
+    robots: shouldNoIndex ? { index: false, follow: true } : { index: true, follow: true },
+    openGraph: {
+      title,
+      description,
+      url: path,
+      siteName: SITE_NAME,
+      type: 'website',
+      images: ogImage ? [{ url: ogImage, width: 1200, alt: `${title} — ${SITE_NAME}` }] : undefined,
+    },
+    twitter: {
+      card: ogImage ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images: ogImage ? [ogImage] : undefined,
+    },
   }
 }
 
@@ -39,6 +63,15 @@ export const breadcrumbJsonLd = (items: { name: string; path: string }[]) => ({
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, item: `${SITE_URL}${it.path}` })),
+})
+
+export type BreadcrumbItem = { name: string; path: string }
+
+export const organizationJsonLd = () => ({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: SITE_URL,
 })
 
 export const itemListJsonLd = (list: Game[]) => ({

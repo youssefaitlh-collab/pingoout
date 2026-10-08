@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.netlify/
+.pnpm-store/
+.tmp-appdata/
+out/
+.env*
+!.env.example
+.tmp-chrome-profile/

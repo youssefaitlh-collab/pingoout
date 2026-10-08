@@ -1,18 +1,19 @@
 import Link from 'next/link'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
 import { genres, platforms, trending } from '@/lib/games'
-import { breadcrumbJsonLd, buildMetadata, imageUrl, itemListJsonLd, JsonLd } from '@/lib/seo'
+import { buildMetadata, imageUrl, itemListJsonLd, JsonLd } from '@/lib/seo'
 
-export const metadata = buildMetadata({ title: 'Trending games', description: 'The games everyone is playing right now, ranked by the PINGOO community.', path: '/trending' })
+export const metadata = buildMetadata({ title: 'Featured games', description: 'Explore games featured in the PINGOO catalog, with links to their genres, platforms, and official sources.', path: '/trending' })
 
 export default function TrendingPage() {
   const list = trending()
   return (
     <div className="container-page section">
-      <JsonLd data={breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'Trending', path: '/trending' }])} />
       <JsonLd data={itemListJsonLd(list)} />
-      <p className="text-sm font-semibold uppercase tracking-wider text-cyan">This week</p>
-      <h1 className="mt-2 text-[32px] font-bold tracking-tight md:text-5xl">Trending now</h1>
-      <p className="mt-3 max-w-2xl text-muted">The games everyone is playing right now.</p>
+      <Breadcrumbs items={[{ name: 'Home', path: '/' }, { name: 'Featured games', path: '/trending' }]} />
+      <p className="text-sm font-semibold uppercase tracking-wider text-cyan">PINGOO catalog</p>
+      <h1 className="mt-2 text-[32px] font-bold tracking-tight md:text-5xl">Featured games</h1>
+      <p className="mt-3 max-w-2xl text-muted">Games currently featured in the PINGOO catalog.</p>
       <ol className="mt-10 divide-y divide-line border-y border-line">
         {list.map((g, i) => (
           <li key={g.slug}>

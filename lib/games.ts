@@ -35,6 +35,15 @@ export type Game = {
   trendingRank?: number
   addedAt: string
   recommended?: boolean
+  /** Optional editorial assessment. Populate only after human editorial review. */
+  editorial?: GameEditorialProfile
+}
+
+export type GameEditorialProfile = {
+  bestSuitedFor?: string[]
+  lessSuitableFor?: string[]
+  strengths?: string[]
+  limitations?: string[]
 }
 
 export const platforms: Record<PlatformSlug, { name: string; group: 'pc' | 'console' | 'mobile' }> = {
@@ -324,6 +333,17 @@ export function related(game: Game, limit = 4) {
     .map((x) => x.g)
 }
 
+/** Explicit relationship accessors keep game knowledge connected to the catalog source. */
+export const gameGenres = (game: Game) => game.genres.map((slug) => ({ slug, ...genres[slug] }))
+export const gamePlatforms = (game: Game) => game.platforms.map((slug) => ({ slug, ...platforms[slug] }))
+export const gamesByDeveloper = (name: string) => games.filter((game) => game.developer === name)
+export const gamesByPublisher = (name: string) => games.filter((game) => game.publisher === name)
+
+/** Editorial content is deliberately empty until PINGOO editors provide verified assessments. */
+export const editorialProfiles: Partial<Record<string, GameEditorialProfile>> = {}
+
+export const getGameEditorial = (game: Game) => game.editorial ?? editorialProfiles[game.slug]
+
 export function searchGames(query: string) {
   const q = query.trim().toLowerCase()
   if (!q) return []
@@ -334,6 +354,23 @@ export function searchGames(query: string) {
       .includes(q),
   )
 }
+
+/** Stable URL-safe entity slugs derived from the catalog's exact names. */
+export const entitySlug = (name: string) => name
+  .normalize('NFKD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-|-$/g, '')
+
+export const developers = [...new Set(games.map((game) => game.developer))]
+  .map((name) => ({ name, slug: entitySlug(name), games: games.filter((game) => game.developer === name) }))
+
+export const publishers = [...new Set(games.map((game) => game.publisher))]
+  .map((name) => ({ name, slug: entitySlug(name), games: games.filter((game) => game.publisher === name) }))
+
+export const getDeveloper = (slug: string) => developers.find((developer) => developer.slug === slug)
+export const getPublisher = (slug: string) => publishers.find((publisher) => publisher.slug === slug)
 
 /** "PC • Action" style label used on cards and suggestions. */
 export const metaLabel = (g: Game) => `${platforms[g.platforms[0]].name} • ${genres[g.genres[0]].name}`

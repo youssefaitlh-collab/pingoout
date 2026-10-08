@@ -19,8 +19,15 @@ export function SearchBox({ items, defaultValue = '', className = '' }: { items:
   }, [q, items])
 
   function onKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'ArrowDown') setActive((a) => Math.min(a + 1, results.length - 1))
-    else if (e.key === 'ArrowUp') setActive((a) => Math.max(a - 1, -1))
+    if (e.key === 'ArrowDown' && results.length > 0) {
+      e.preventDefault()
+      setOpen(true)
+      setActive((a) => Math.min(a + 1, results.length - 1))
+    }
+    else if (e.key === 'ArrowUp' && results.length > 0) {
+      e.preventDefault()
+      setActive((a) => Math.max(a - 1, -1))
+    }
     else if (e.key === 'Escape') setOpen(false)
     else if (e.key === 'Enter' && active >= 0 && results[active]) {
       e.preventDefault()
@@ -50,16 +57,24 @@ export function SearchBox({ items, defaultValue = '', className = '' }: { items:
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={onKeyDown}
         role="combobox"
+        aria-autocomplete="list"
+        aria-haspopup="listbox"
         aria-expanded={showList}
-        aria-controls={listId}
-        aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
+        aria-controls={showList ? listId : undefined}
+        aria-activedescendant={showList && active >= 0 ? `${listId}-${active}` : undefined}
         className="h-11 w-full rounded-lg border border-line bg-surface pl-10 pr-3 text-[15px] text-text placeholder:text-muted transition-colors duration-150 focus:border-primary focus:outline-none"
       />
       {showList && (
         <ul id={listId} role="listbox" className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-lg border border-line bg-elevated py-1 shadow-lg shadow-black/30">
           {results.map((r, i) => (
-            <li key={r.slug} id={`${listId}-${i}`} role="option" aria-selected={i === active}>
-              <Link href={`/games/${r.slug}`} className={`flex items-center gap-3 px-3 py-2 transition-colors ${i === active ? 'bg-surface' : 'hover:bg-surface'}`}>
+            <li key={r.slug}>
+              <Link
+                href={`/games/${r.slug}`}
+                id={`${listId}-${i}`}
+                role="option"
+                aria-selected={i === active}
+                className={`flex items-center gap-3 px-3 py-2 transition-colors ${i === active ? 'bg-surface' : 'hover:bg-surface'}`}
+              >
                 <img src={r.thumb} alt="" width={64} height={36} className="h-9 w-16 rounded object-cover" loading="lazy" />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold">{r.title}</span>
