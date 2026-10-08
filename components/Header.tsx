@@ -7,10 +7,12 @@ import { SearchBox, type Suggestion } from './SearchBox'
 
 export const navLinks = [
   { href: '/games', label: 'Games' },
-  { href: '/trending', label: 'Trending' },
+  { href: '/trending', label: 'Featured' },
   { href: '/mobile-games', label: 'Mobile' },
   { href: '/pc-games', label: 'PC' },
   { href: '/console-games', label: 'Console' },
+  { href: '/discover', label: 'Find a game' },
+  { href: '/compare', label: 'Compare' },
 ]
 
 // Only the fields the suggestion dropdown needs are sent to the client.
@@ -19,7 +21,7 @@ export const suggestions: Suggestion[] = games.map((g) => ({
   title: g.title,
   meta: metaLabel(g),
   thumb: imageUrl(g.image, 128),
-  keywords: [g.title, ...g.genres.map((s) => genres[s].name), ...g.platforms.map((p) => platforms[p].name)].join(' ').toLowerCase(),
+  keywords: [g.title, g.developer, g.publisher, ...g.genres.map((s) => genres[s].name), ...g.platforms.map((p) => platforms[p].name)].join(' ').toLowerCase(),
 }))
 
 export function Header() {

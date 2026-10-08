@@ -4,8 +4,8 @@ import { byGroup, featuredGame as f, genres, platforms, recentlyAdded, recommend
 import { buildMetadata, imageUrl } from '@/lib/seo'
 
 export const metadata = buildMetadata({
-  title: 'PINGOO — Discover your next game',
-  description: 'Discover trending, mobile, PC and console games on PINGOO, and find official sources to play them.',
+  title: 'Discover your next game',
+  description: 'Discover PC, console and mobile games on PINGOO by genre and platform, then visit an official store to play.',
   path: '/',
   image: f.image,
 })
@@ -36,18 +36,18 @@ export default function Home() {
         </div>
       </section>
 
-      <GameSection title="Trending Now" href="/trending" games={trending()} />
+      <GameSection title="Featured Games" href="/trending" games={trending()} />
       <GameSection title="Popular Mobile Games" href="/mobile-games" games={byGroup('mobile')} />
       <GameSection title="Popular PC Games" href="/pc-games" games={byGroup('pc')} />
       <GameSection title="Recently Added" href="/games" games={recentlyAdded()} />
-      <GameSection title="Recommended For You" games={recommended()} />
+      <GameSection title="More to Explore" games={recommended()} />
 
       <section className="section container-page" aria-labelledby="genres-title">
         <h2 id="genres-title" className="h2 mb-6">Explore Genres</h2>
         <ul className="flex flex-wrap gap-3">
           {Object.entries(genres).map(([slug, g]) => (
             <li key={slug}>
-              <Link href={`/category/${slug}`} className="inline-flex h-11 items-center rounded-lg border border-line bg-surface px-4 text-[15px] font-medium transition-colors duration-150 hover:border-cyan hover:text-cyan">
+              <Link href={`/genres/${slug}`} className="inline-flex h-11 items-center rounded-lg border border-line bg-surface px-4 text-[15px] font-medium transition-colors duration-150 hover:border-cyan hover:text-cyan">
                 {g.name}
               </Link>
             </li>

@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { GameGrid } from '@/components/GameCard'
-import { games, genres, getGame, platforms, related } from '@/lib/games'
-import { breadcrumbJsonLd, buildMetadata, faqJsonLd, gameJsonLd, imageUrl, JsonLd } from '@/lib/seo'
+import { GameCard } from '@/components/GameCard'
+import { Breadcrumbs } from '@/components/Breadcrumbs'
+import { entitySlug, games, genres, getGame, getGameEditorial, platforms } from '@/lib/games'
+import { findSimilarGames } from '@/lib/game-intelligence'
+import { buildMetadata, faqJsonLd, gameJsonLd, imageUrl, JsonLd } from '@/lib/seo'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -20,26 +22,28 @@ export default async function GamePage({ params }: Props) {
 
   const genreNames = game.genres.map((g) => genres[g].name)
   const platformNames = game.platforms.map((p) => platforms[p].name)
+  const developerSlug = entitySlug(game.developer)
+  const publisherSlug = entitySlug(game.publisher)
   const primary = game.sources[0]
   const faq = [
     { q: `Where can I get ${game.title}?`, a: `${game.title} is available from official sources: ${game.sources.map((s) => s.name).join(', ')}. PINGOO links only to official and authorized stores.` },
     { q: `What platforms is ${game.title} on?`, a: `${game.title} is available on ${platformNames.join(', ')}.` },
     { q: `Who made ${game.title}?`, a: `${game.title} was developed by ${game.developer} and published by ${game.publisher} in ${game.releaseYear}.` },
   ]
-  const info = [
-    ['Developer', game.developer],
-    ['Publisher', game.publisher],
-    ['Release', String(game.releaseYear)],
-    ['Platforms', platformNames.join(' • ')],
-    ['Genre', genreNames.join(' / ')],
+  const info: { label: string; value: React.ReactNode }[] = [
+    { label: 'Developer', value: <Link href={`/developers/${developerSlug}`} className="rounded hover:text-primary">{game.developer}</Link> },
+    { label: 'Publisher', value: <Link href={`/publishers/${publisherSlug}`} className="rounded hover:text-primary">{game.publisher}</Link> },
+    { label: 'Release year', value: String(game.releaseYear) },
+    { label: 'Platforms', value: game.platforms.map((slug, index) => <span key={slug}>{index > 0 && ' • '}<Link href={`/platforms/${slug}`} className="rounded hover:text-primary">{platforms[slug].name}</Link></span>) },
+    { label: 'Genre', value: game.genres.map((slug, index) => <span key={slug}>{index > 0 && ' • '}<Link href={`/genres/${slug}`} className="rounded hover:text-primary">{genres[slug].name}</Link></span>) },
   ]
-  const more = related(game)
+  const more = findSimilarGames(game)
+  const editorial = getGameEditorial(game)
 
   return (
     <article>
       <JsonLd data={gameJsonLd(game)} />
       <JsonLd data={faqJsonLd(faq)} />
-      <JsonLd data={breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'Games', path: '/games' }, { name: game.title, path: `/games/${game.slug}` }])} />
 
       <header className="relative isolate overflow-hidden border-b border-line">
         <img
@@ -52,11 +56,21 @@ export default async function GamePage({ params }: Props) {
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-bg via-bg/75 to-bg/20" />
         <div className="container-page flex min-h-[360px] flex-col justify-end pb-10 pt-24 md:min-h-[480px]">
-          <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted">
-            <Link href="/games" className="hover:text-text">Games</Link> <span aria-hidden="true">/</span> <span className="text-text">{game.title}</span>
-          </nav>
+          <Breadcrumbs items={[
+            { name: 'Home', path: '/' },
+            { name: 'Games', path: '/games' },
+            ...(game.genres[0] ? [{ name: genres[game.genres[0]].name, path: `/genres/${game.genres[0]}` }] : []),
+            { name: game.title, path: `/games/${game.slug}` },
+          ]} />
           <h1 className="text-[34px] font-bold leading-tight tracking-tight md:text-[56px]">{game.title}</h1>
-          <p className="mt-2 text-sm font-medium text-muted md:text-[15px]">{genreNames.join(' • ')}</p>
+          <p className="mt-2 text-sm font-medium text-muted md:text-[15px]">
+            {game.genres.map((slug, index) => (
+              <span key={slug}>
+                {index > 0 && ' • '}
+                <Link href={`/genres/${slug}`} className="rounded hover:text-text">{genres[slug].name}</Link>
+              </span>
+            ))}
+          </p>
           <p className="mt-4 max-w-2xl text-[15px] text-text/90 md:text-[17px]">{game.tagline}</p>
           <div className="mt-7">
             <a href={primary.url} target="_blank" rel="noopener noreferrer nofollow" className="btn-primary">
@@ -79,8 +93,19 @@ export default async function GamePage({ params }: Props) {
               ))}
             </ul>
           </Block>
+          {editorial && Object.values(editorial).some((items) => items?.length) && <Block title="Who is this game for?">
+            <div className="grid gap-5 sm:grid-cols-2">
+              {([
+                ['Best suited for', editorial.bestSuitedFor],
+                ['Less suitable for', editorial.lessSuitableFor],
+                ['Strengths', editorial.strengths],
+                ['Limitations', editorial.limitations],
+              ] as const).filter(([, items]) => items?.length).map(([title, items]) => <section key={title} className="rounded-lg border border-line bg-surface p-5"><h3 className="font-semibold">{title}</h3><ul className="mt-3 list-inside list-disc space-y-2 text-sm text-muted">{items?.map((item) => <li key={item}>{item}</li>)}</ul></section>)}
+            </div>
+          </Block>}
           {game.requirements && (
             <Block title="System Requirements">
+              <p className="mb-4 text-sm"><Link href={`/pc-compatibility?game=${game.slug}`} className="text-primary hover:underline">Compare with your PC details →</Link></p>
               <div className="grid gap-6 rounded-lg border border-line bg-surface p-5 sm:grid-cols-2">
                 {(['minimum', 'recommended'] as const).map((k) => (
                   <div key={k}>
@@ -95,7 +120,7 @@ export default async function GamePage({ params }: Props) {
             <ul className="flex flex-wrap gap-2">
               {game.platforms.map((p) => (
                 <li key={p}>
-                  <Link href={`/platform/${p}`} className="inline-flex h-10 items-center rounded-lg border border-line bg-surface px-4 text-sm font-medium hover:border-primary">{platforms[p].name}</Link>
+                  <Link href={`/platforms/${p}`} className="inline-flex h-10 items-center rounded-lg border border-line bg-surface px-4 text-sm font-medium hover:border-primary">{platforms[p].name}</Link>
                 </li>
               ))}
             </ul>
@@ -118,10 +143,10 @@ export default async function GamePage({ params }: Props) {
           <section aria-labelledby="info-title">
             <h2 id="info-title" className="mb-3 text-xl font-bold">Game Information</h2>
             <dl className="divide-y divide-line rounded-lg border border-line bg-surface px-5">
-              {info.map(([k, v]) => (
-                <div key={k} className="py-3">
-                  <dt className="text-xs font-medium uppercase tracking-wider text-muted">{k}</dt>
-                  <dd className="mt-0.5 text-[15px] font-medium">{v}</dd>
+              {info.map(({ label, value }) => (
+                <div key={label} className="py-3">
+                  <dt className="text-xs font-medium uppercase tracking-wider text-muted">{label}</dt>
+                  <dd className="mt-0.5 text-[15px] font-medium">{value}</dd>
                 </div>
               ))}
             </dl>
@@ -142,10 +167,13 @@ export default async function GamePage({ params }: Props) {
         </aside>
       </div>
 
+      <div className="container-page -mt-5 pb-10"><Link href={`/compare?game=${game.slug}`} className="btn-secondary">Compare {game.title} with another game</Link></div>
+
       {more.length > 0 && (
         <section className="container-page section border-t border-line" aria-labelledby="related-title">
-          <h2 id="related-title" className="h2 mb-6">Related Games</h2>
-          <GameGrid games={more} />
+          <h2 id="related-title" className="h2 mb-2">Games Like This</h2>
+          <p className="mb-6 text-sm text-muted">Ranked using shared catalog attributes: genre, platform, exact feature, developer, publisher, and release within two years. Reasons are shown for each match.</p>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-7 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">{more.map(({ game: candidate, reasons }) => <li key={candidate.slug}><GameCard game={candidate} /><ul className="mt-2 space-y-1 text-xs text-muted">{reasons.slice(0, 3).map((reason) => <li key={reason}>• {reason}</li>)}</ul></li>)}</ul>
         </section>
       )}
     </article>
