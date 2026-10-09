@@ -1,4 +1,4 @@
-import { games, genres, platforms, type Game } from './games'
+import { games, genres, platforms, type Game } from './games.ts'
 
 export type SimilarGame = { game: Game; reasons: string[]; rankValue: number }
 
@@ -57,6 +57,31 @@ export function filterGames(filters: { platform?: string; genre?: string; period
     if (filters.pcRequirements && !game.requirements) return false
     return true
   })
+}
+
+export type FinderPreferences = {
+  platform?: Game['platforms'][number]
+  genre?: Game['genres'][number]
+  pcRequirements?: boolean
+}
+
+/** Return catalog-backed matches and explain each match using only selected, known fields. */
+export function recommendGames(preferences: FinderPreferences) {
+  if (!preferences.platform && !preferences.genre && !preferences.pcRequirements) return []
+
+  return games
+    .filter((game) => !preferences.platform || game.platforms.includes(preferences.platform))
+    .filter((game) => !preferences.genre || game.genres.includes(preferences.genre))
+    .filter((game) => !preferences.pcRequirements || Boolean(game.requirements))
+    .map((game) => ({
+      game,
+      reasons: [
+        ...(preferences.platform ? [`Available on ${platforms[preferences.platform].name}`] : []),
+        ...(preferences.genre ? [`Matches ${genres[preferences.genre].name}`] : []),
+        ...(preferences.pcRequirements ? ['Published PC requirements are listed'] : []),
+      ],
+    }))
+    .sort((a, b) => a.game.title.localeCompare(b.game.title))
 }
 
 export type RequirementCheck = { requirement: string; status: 'meets' | 'below' | 'unknown'; explanation: string }

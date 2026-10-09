@@ -29,6 +29,7 @@ export default async function DiscoverPage({ searchParams }: Props) {
     <p className="text-sm font-semibold uppercase tracking-wider text-cyan">Game discovery</p>
     <h1 className="mt-2 text-[32px] font-bold tracking-tight md:text-5xl">Find a game</h1>
     <p className="mt-3 max-w-2xl text-muted">Combine catalog filters to explore games by platform, genre, release period, listed features and PC requirements.</p>
+    <p className="mt-4 text-sm text-muted">Prefer a guided shortlist? <Link href="/game-finder" className="font-medium text-primary hover:underline">Try the Game Finder →</Link></p>
     <form action="/discover" method="get" className="mt-7 grid gap-4 rounded-lg border border-line bg-surface p-5 sm:grid-cols-2 lg:grid-cols-3">
       <label className="text-sm font-medium">Platform<select name="platform" defaultValue={validPlatform} className="mt-2 h-12 w-full rounded-lg border border-line bg-bg px-3"><option value="">Any platform</option>{availablePlatforms().map(([slug, platform]) => <option key={slug} value={slug}>{platform.name}</option>)}</select></label>
       <label className="text-sm font-medium">Genre<select name="genre" defaultValue={validGenre} className="mt-2 h-12 w-full rounded-lg border border-line bg-bg px-3"><option value="">Any genre</option>{availableGenres().map(([slug, genre]) => <option key={slug} value={slug}>{genre.name}</option>)}</select></label>
