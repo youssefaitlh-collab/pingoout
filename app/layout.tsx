@@ -1,3 +1,4 @@
+import Script from 'next/script'
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Footer } from '@/components/Footer'
@@ -32,7 +33,13 @@ export const viewport: Viewport = { themeColor: '#080D18' }
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="flex min-h-screen flex-col bg-bg font-sans text-text">
+  <body className="flex min-h-screen flex-col bg-bg font-sans text-text">
+    <Script
+      id="google-adsense"
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9824075482126113"
+      strategy="beforeInteractive"
+      crossOrigin="anonymous"
+    />
         <JsonLd data={websiteJsonLd()} />
         <JsonLd data={organizationJsonLd()} />
         <Header />
