@@ -1,16 +1,20 @@
-import { developers, games, genres, platforms, publishers } from '@/lib/games'
+import { developers, publishedGames, genres, platforms, publishers } from '@/lib/games'
 
 export const SITEMAP_PAGE_SIZE = 10_000
 
 export function indexablePaths() {
-  const paths = [
-    '/', '/games', '/trending', '/mobile-games', '/pc-games', '/console-games', '/about', '/contact', '/privacy', '/terms',
-    ...games.map((game) => `/games/${game.slug}`),
-    ...Object.keys(genres).map((slug) => `/genres/${slug}`),
-    ...Object.keys(platforms).map((slug) => `/platforms/${slug}`),
-    ...developers.filter(({ games: entityGames }) => entityGames.length >= 2).map(({ slug }) => `/developers/${slug}`),
-    ...publishers.filter(({ games: entityGames }) => entityGames.length >= 2).map(({ slug }) => `/publishers/${slug}`),
-  ]
+  const paths = ['/', '/about', '/contact', '/privacy', '/terms']
+  if (publishedGames.length) {
+    paths.push('/games')
+    if (publishedGames.filter((game) => game.platforms.some((platform) => platforms[platform].group === 'mobile')).length >= 2) paths.push('/mobile-games')
+    if (publishedGames.filter((game) => game.platforms.some((platform) => platforms[platform].group === 'pc')).length >= 2) paths.push('/pc-games')
+    if (publishedGames.filter((game) => game.platforms.some((platform) => platforms[platform].group === 'console')).length >= 2) paths.push('/console-games')
+    paths.push(...publishedGames.map((game) => `/games/${game.slug}`))
+    paths.push(...Object.keys(genres).filter((slug) => publishedGames.filter((game) => game.genres.includes(slug as keyof typeof genres)).length >= 2).map((slug) => `/genres/${slug}`))
+    paths.push(...Object.keys(platforms).filter((slug) => publishedGames.filter((game) => game.platforms.includes(slug as keyof typeof platforms)).length >= 2).map((slug) => `/platforms/${slug}`))
+    paths.push(...developers.filter(({ games: entityGames }) => entityGames.filter((game) => game.catalogStatus === 'verified').length >= 2).map(({ slug }) => `/developers/${slug}`))
+    paths.push(...publishers.filter(({ games: entityGames }) => entityGames.filter((game) => game.catalogStatus === 'verified').length >= 2).map(({ slug }) => `/publishers/${slug}`))
+  }
   return [...new Set(paths)]
 }
 

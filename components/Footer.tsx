@@ -21,7 +21,7 @@ export function Footer() {
         <FooterList title="Pingoo" links={legal} />
       </div>
       <div className="container-page border-t border-line py-5 text-xs text-muted">
-        © {new Date().getFullYear()} PINGOO. Game names and artwork belong to their respective owners.
+        © {new Date().getFullYear()} PINGOO. Sources and last-checked dates are shown on game profiles; demo entries are illustrative.
       </div>
     </footer>
   )

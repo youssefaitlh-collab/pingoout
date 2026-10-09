@@ -2,19 +2,16 @@ import Link from 'next/link'
 import { TextPage } from '@/components/TextPage'
 import { buildMetadata } from '@/lib/seo'
 
-export const metadata = buildMetadata({ title: 'About', description: 'PINGOO helps gamers discover new games and find official places to play them.', path: '/about' })
+export const metadata = buildMetadata({ title: 'About', description: 'Learn how PINGOO sources and presents game information.', path: '/about' })
 
 export default function AboutPage() {
   return (
-    <TextPage title="About PINGOO" intro="PINGOO is a game discovery platform. We help you find your next game, then point you to the official place to get it.">
+    <TextPage title="About PINGOO" intro="PINGOO is a game discovery platform that organizes game information, PC requirements and comparisons.">
       <section>
         <h2>What we do</h2>
-        <p>Browse trending games, explore by genre or platform, and read clear game pages with the key facts: who made it, where it runs and what it is about.</p>
+        <p>PINGOO profiles link to official publisher, developer or authorized store sources for factual details. Profiles display when their information was last checked; unverified fields are omitted.</p>
       </section>
-      <section>
-        <h2>Official sources only</h2>
-        <p>PINGOO does not host or distribute game files. Every “Official Source” link takes you to the publisher or an authorized store, such as Steam, PlayStation Store, Xbox, Nintendo eShop, Google Play or the App Store.</p>
-      </section>
+      <section><h2>Catalog verification</h2><p>We keep editorial guidance separate from sourced product facts. Entries marked Demo are illustrative and are not included in the public game catalogue or search index.</p></section>
       <section>
         <h2>Get in touch</h2>
         <p>Want to suggest a game or report a problem? <Link href="/contact" className="text-primary underline-offset-4 hover:underline">Contact us</Link>.</p>

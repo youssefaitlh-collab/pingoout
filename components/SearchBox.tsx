@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useId, useMemo, useState } from 'react'
 
-export type Suggestion = { slug: string; title: string; meta: string; thumb: string; keywords: string }
+export type Suggestion = { slug: string; title: string; meta: string; thumb?: string; keywords: string }
 
 export function SearchBox({ items, defaultValue = '', className = '' }: { items: Suggestion[]; defaultValue?: string; className?: string }) {
   const router = useRouter()
@@ -75,7 +75,7 @@ export function SearchBox({ items, defaultValue = '', className = '' }: { items:
                 aria-selected={i === active}
                 className={`flex items-center gap-3 px-3 py-2 transition-colors ${i === active ? 'bg-surface' : 'hover:bg-surface'}`}
               >
-                <img src={r.thumb} alt="" width={64} height={36} className="h-9 w-16 rounded object-cover" loading="lazy" />
+                {r.thumb ? <img src={r.thumb} alt="" width={64} height={36} className="h-9 w-16 rounded object-cover" loading="lazy" /> : <span aria-hidden="true" className="h-9 w-16 shrink-0 rounded bg-surface" />}
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-semibold">{r.title}</span>
                   <span className="block text-xs font-medium text-muted">{r.meta}</span>

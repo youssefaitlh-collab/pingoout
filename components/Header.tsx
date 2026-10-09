@@ -7,7 +7,7 @@ import { SearchBox, type Suggestion } from './SearchBox'
 
 export const navLinks = [
   { href: '/games', label: 'Games' },
-  { href: '/trending', label: 'Featured' },
+  { href: '/trending', label: 'Catalog' },
   { href: '/mobile-games', label: 'Mobile' },
   { href: '/pc-games', label: 'PC' },
   { href: '/console-games', label: 'Console' },
@@ -20,7 +20,7 @@ export const suggestions: Suggestion[] = games.map((g) => ({
   slug: g.slug,
   title: g.title,
   meta: metaLabel(g),
-  thumb: imageUrl(g.image, 128),
+  thumb: g.image ? imageUrl(g.image, 128) : undefined,
   keywords: [g.title, g.developer, g.publisher, ...g.genres.map((s) => genres[s].name), ...g.platforms.map((p) => platforms[p].name)].join(' ').toLowerCase(),
 }))
 

@@ -2,18 +2,18 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { GameCard } from '@/components/GameCard'
 import { Breadcrumbs } from '@/components/Breadcrumbs'
-import { entitySlug, games, genres, getGame, getGameEditorial, platforms } from '@/lib/games'
+import { allGames, entitySlug, games, genres, getGame, getGameEditorial, platforms } from '@/lib/games'
 import { findSimilarGames } from '@/lib/game-intelligence'
-import { buildMetadata, faqJsonLd, gameJsonLd, imageUrl, JsonLd } from '@/lib/seo'
+import { buildMetadata, gameJsonLd, imageUrl, JsonLd } from '@/lib/seo'
 
 type Props = { params: Promise<{ slug: string }> }
 
 export const dynamicParams = false
-export const generateStaticParams = () => games.map((g) => ({ slug: g.slug }))
+export const generateStaticParams = () => allGames.map((g) => ({ slug: g.slug }))
 
 export async function generateMetadata({ params }: Props) {
   const game = getGame((await params).slug)
-  return game ? buildMetadata({ title: game.title, description: `${game.tagline} ${game.description}`.slice(0, 158), path: `/games/${game.slug}`, image: game.image }) : {}
+  return game ? buildMetadata({ title: `${game.title} — Game details | PINGOO`, description: `${game.tagline} ${game.description}`.slice(0, 158), path: `/games/${game.slug}`, image: game.image, noIndex: game.catalogStatus !== 'verified' }) : {}
 }
 
 export default async function GamePage({ params }: Props) {
@@ -21,39 +21,32 @@ export default async function GamePage({ params }: Props) {
   if (!game) notFound()
 
   const genreNames = game.genres.map((g) => genres[g].name)
-  const platformNames = game.platforms.map((p) => platforms[p].name)
   const developerSlug = entitySlug(game.developer)
   const publisherSlug = entitySlug(game.publisher)
-  const primary = game.sources[0]
-  const faq = [
-    { q: `Where can I get ${game.title}?`, a: `${game.title} is available from official sources: ${game.sources.map((s) => s.name).join(', ')}. PINGOO links only to official and authorized stores.` },
-    { q: `What platforms is ${game.title} on?`, a: `${game.title} is available on ${platformNames.join(', ')}.` },
-    { q: `Who made ${game.title}?`, a: `${game.title} was developed by ${game.developer} and published by ${game.publisher} in ${game.releaseYear}.` },
-  ]
   const info: { label: string; value: React.ReactNode }[] = [
     { label: 'Developer', value: <Link href={`/developers/${developerSlug}`} className="rounded hover:text-primary">{game.developer}</Link> },
     { label: 'Publisher', value: <Link href={`/publishers/${publisherSlug}`} className="rounded hover:text-primary">{game.publisher}</Link> },
-    { label: 'Release year', value: String(game.releaseYear) },
+    { label: game.releaseDate ? 'Release date' : 'Release year', value: game.releaseDate ?? String(game.releaseYear) },
     { label: 'Platforms', value: game.platforms.map((slug, index) => <span key={slug}>{index > 0 && ' • '}<Link href={`/platforms/${slug}`} className="rounded hover:text-primary">{platforms[slug].name}</Link></span>) },
     { label: 'Genre', value: game.genres.map((slug, index) => <span key={slug}>{index > 0 && ' • '}<Link href={`/genres/${slug}`} className="rounded hover:text-primary">{genres[slug].name}</Link></span>) },
   ]
   const more = findSimilarGames(game)
   const editorial = getGameEditorial(game)
+  const structuredGame = gameJsonLd(game)
 
   return (
     <article>
-      <JsonLd data={gameJsonLd(game)} />
-      <JsonLd data={faqJsonLd(faq)} />
+      {structuredGame && <JsonLd data={structuredGame} />}
 
       <header className="relative isolate overflow-hidden border-b border-line">
-        <img
+        {game.image && <img
           src={imageUrl(game.image, 1920)}
           srcSet={`${imageUrl(game.image, 828)} 828w, ${imageUrl(game.image, 1280)} 1280w, ${imageUrl(game.image, 1920)} 1920w`}
           sizes="100vw"
           alt={`${game.title} artwork`}
           fetchPriority="high"
           className="absolute inset-0 -z-10 h-full w-full object-cover"
-        />
+        />}
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-bg via-bg/75 to-bg/20" />
         <div className="container-page flex min-h-[360px] flex-col justify-end pb-10 pt-24 md:min-h-[480px]">
           <Breadcrumbs items={[
@@ -72,18 +65,13 @@ export default async function GamePage({ params }: Props) {
             ))}
           </p>
           <p className="mt-4 max-w-2xl text-[15px] text-text/90 md:text-[17px]">{game.tagline}</p>
-          <div className="mt-7">
-            <a href={primary.url} target="_blank" rel="noopener noreferrer nofollow" className="btn-primary">
-              Official Source <span className="sr-only">(opens {primary.name} in a new tab)</span>
-              <span aria-hidden="true">↗</span>
-            </a>
-          </div>
         </div>
       </header>
 
       <div className="container-page grid gap-10 py-10 md:py-14 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-14">
         <div className="space-y-12">
-          <Block title="About">
+          {game.catalogStatus === 'demo' && <p role="note" className="rounded-lg border border-amber-400/30 bg-amber-950/40 p-4 text-sm text-amber-100">Demo entry: details, artwork and specifications on this page are illustrative and are not verified product information.</p>}
+          <Block title={game.catalogStatus === 'verified' ? 'About this game' : 'About (sample content)'}>
             <p className="text-[16px] leading-relaxed text-text/90">{game.description}</p>
           </Block>
           <Block title="Features">
@@ -107,13 +95,14 @@ export default async function GamePage({ params }: Props) {
             <Block title="System Requirements">
               <p className="mb-4 text-sm"><Link href={`/pc-compatibility?game=${game.slug}`} className="text-primary hover:underline">Compare with your PC details →</Link></p>
               <div className="grid gap-6 rounded-lg border border-line bg-surface p-5 sm:grid-cols-2">
-                {(['minimum', 'recommended'] as const).map((k) => (
+                {(['minimum', 'recommended'] as const).filter((k) => game.requirements![k].length > 0).map((k) => (
                   <div key={k}>
                     <h3 className="mb-2 text-sm font-semibold capitalize">{k}</h3>
                     <ul className="space-y-1 text-sm text-muted">{game.requirements![k].map((r) => <li key={r}>{r}</li>)}</ul>
                   </div>
                 ))}
               </div>
+              {game.provenance?.requirements?.map((url) => <p key={url} className="mt-3 text-xs text-muted">Requirement source: <a className="underline decoration-muted underline-offset-2 hover:text-text" href={url} target="_blank" rel="noopener noreferrer nofollow">official source or store listing ↗</a></p>)}
             </Block>
           )}
           <Block title="Available Platforms">
@@ -124,18 +113,6 @@ export default async function GamePage({ params }: Props) {
                 </li>
               ))}
             </ul>
-          </Block>
-          <Block title="FAQ">
-            <div className="divide-y divide-line rounded-lg border border-line bg-surface">
-              {faq.map((f) => (
-                <details key={f.q} className="group px-5">
-                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 py-3 font-semibold [&::-webkit-details-marker]:hidden">
-                    {f.q}<span className="text-muted transition-transform duration-200 group-open:rotate-45" aria-hidden="true">+</span>
-                  </summary>
-                  <p className="pb-4 text-[15px] text-muted">{f.a}</p>
-                </details>
-              ))}
-            </div>
           </Block>
         </div>
 
@@ -151,19 +128,21 @@ export default async function GamePage({ params }: Props) {
               ))}
             </dl>
           </section>
-          <section aria-labelledby="sources-title">
-            <h2 id="sources-title" className="mb-3 text-xl font-bold">Official sources</h2>
+          {game.catalogStatus === 'verified' && game.sources.length > 0 && <section aria-labelledby="sources-title">
+            <h2 id="sources-title" className="mb-3 text-xl font-bold">Where to find it</h2>
             <ul className="space-y-2">
-              {game.sources.map((s) => (
-                <li key={s.name}>
-                  <a href={s.url} target="_blank" rel="noopener noreferrer nofollow" className="flex h-12 items-center justify-between rounded-lg border border-line bg-surface px-4 font-medium transition-colors hover:border-primary">
-                    {s.name}<span className="text-muted" aria-hidden="true">↗</span>
+              {game.sources.map((source) => (
+                <li key={source.url}>
+                  <a href={source.url} target="_blank" rel={source.commercial ? 'noopener noreferrer nofollow sponsored' : 'noopener noreferrer nofollow'} className="flex min-h-12 items-center justify-between rounded-lg border border-line bg-surface px-4 py-3 font-medium transition-colors hover:border-primary">
+                    {source.name}<span className="text-muted" aria-hidden="true">↗</span>
                   </a>
+                  <p className="mt-1 text-xs text-muted">Checked {source.verifiedAt}</p>
+                  {source.commercial?.relationship === 'affiliate' && <p className="mt-1 text-xs text-muted">{source.commercial.disclosure}</p>}
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-muted">PINGOO never hosts game files. We only link to official and authorized stores.</p>
-          </section>
+          </section>}
+          {game.catalogStatus === 'verified' && <p className="text-xs text-muted">Factual details last checked {game.lastVerifiedAt}. Unknown fields are omitted when they have not been verified.</p>}
         </aside>
       </div>
 

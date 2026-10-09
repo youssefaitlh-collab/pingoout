@@ -6,9 +6,10 @@ import { GameGrid } from './GameCard'
 
 /** Shared layout for every catalogue-style page (all games, genre, platform, mobile/PC/console). */
 export function ListingPage({ eyebrow, title, description, path, games, breadcrumbs }: { eyebrow: string; title: string; description: string; path: string; games: Game[]; breadcrumbs?: BreadcrumbItem[] }) {
+  const structuredList = itemListJsonLd(games)
   return (
     <div className="container-page section">
-      <JsonLd data={itemListJsonLd(games)} />
+      {structuredList && <JsonLd data={structuredList} />}
       <Breadcrumbs items={breadcrumbs ?? [{ name: 'Home', path: '/' }, { name: title, path }]} />
       <p className="text-sm font-semibold uppercase tracking-wider text-cyan">{eyebrow}</p>
       <h1 className="mt-2 text-[32px] font-bold tracking-tight md:text-5xl">{title}</h1>
