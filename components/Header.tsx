@@ -7,11 +7,11 @@ import { SearchBox, type Suggestion } from './SearchBox'
 
 export const navLinks = [
   { href: '/games', label: 'Games' },
-  { href: '/trending', label: 'Catalog' },
   { href: '/mobile-games', label: 'Mobile' },
   { href: '/pc-games', label: 'PC' },
   { href: '/console-games', label: 'Console' },
   { href: '/discover', label: 'Find a game' },
+  { href: '/game-finder', label: 'Game Finder' },
   { href: '/compare', label: 'Compare' },
 ]
 

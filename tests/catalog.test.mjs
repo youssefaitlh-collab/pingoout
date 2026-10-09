@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { allGames, availableGenres, availablePlatforms, byGenre, byGroup, games, searchGames, validateCatalog } from '../lib/games.ts'
+import { comparePcRequirements, filterGames, findSimilarGames, recommendGames } from '../lib/game-intelligence.ts'
 
 let failures = 0
 function test(name, run) {
@@ -62,6 +63,34 @@ test('verified records reject generic search destinations', () => {
 test('verified facts are mapped to real source URLs in the source list', () => {
   const invalid = { ...games[0], provenance: { ...games[0].provenance, title: ['https://unlisted.example/fact'] } }
   assert.ok(validateCatalog([invalid]).some((error) => error.includes('Verified claim lacks source provenance (title)')))
+})
+
+test('discovery filters compose as an intersection and return published games only', () => {
+  const matches = filterGames({ platform: 'pc', genre: 'racing', pcRequirements: true })
+  assert.ok(matches.length > 0)
+  assert.ok(matches.every((game) => game.catalogStatus === 'verified' && game.platforms.includes('pc') && game.genres.includes('racing') && game.requirements))
+})
+
+test('finder returns explainable matches and requires at least one preference', () => {
+  assert.deepEqual(recommendGames({}), [])
+  const matches = recommendGames({ platform: 'pc', genre: 'racing', pcRequirements: true })
+  assert.ok(matches.length > 0)
+  assert.ok(matches.every(({ game, reasons }) => game.platforms.includes('pc') && game.genres.includes('racing') && game.requirements && reasons.length === 3))
+})
+
+test('similar-game results are deterministic and include their factual match reasons', () => {
+  const first = findSimilarGames(games[0])
+  const second = findSimilarGames(games[0])
+  assert.deepEqual(first, second)
+  assert.ok(first.every(({ game, reasons }) => game.catalogStatus === 'verified' && reasons.length > 0))
+})
+
+test('PC compatibility checks compare entered RAM and leave unsupported hardware unknown', () => {
+  const game = games.find((entry) => entry.requirements)
+  assert.ok(game)
+  const checks = comparePcRequirements(game, { ramGb: 1, operatingSystem: 'Windows 11' })
+  assert.equal(checks.find((check) => /Memory|RAM/i.test(check.requirement))?.status, 'below')
+  assert.ok(checks.filter((check) => /Graphics|CPU/i.test(check.requirement)).every((check) => check.status === 'unknown'))
 })
 
 if (failures) process.exitCode = 1
