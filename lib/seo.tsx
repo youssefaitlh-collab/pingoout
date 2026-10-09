@@ -15,14 +15,20 @@ export const isPreviewDeployment = Boolean(process.env.CONTEXT && process.env.CO
 const netlifyImageCdnAvailable = process.env.NETLIFY === 'true' ||
   ['production', 'deploy-preview', 'branch-deploy'].includes(process.env.CONTEXT || '')
 
-export const imageUrl = (file: string, w: number) => netlifyImageCdnAvailable
-  ? `/.netlify/images?url=/img/${encodeURIComponent(file)}&w=${w}&fm=webp`
-  : `/img/${encodeURIComponent(file)}`
+export const imageUrl = (file: string, w: number) => /^https:\/\//i.test(file)
+  ? file
+  : netlifyImageCdnAvailable
+    ? `/.netlify/images?url=/img/${encodeURIComponent(file)}&w=${w}&fm=webp`
+    : `/img/${encodeURIComponent(file)}`
+
+const absoluteImageUrl = (file: string, w: number) => /^https:\/\//i.test(file)
+  ? file
+  : `${SITE_URL}${imageUrl(file, w)}`
 
 type MetaInput = { title: string; description: string; path: string; image?: string; noIndex?: boolean }
 
 export function buildMetadata({ title, description, path, image, noIndex }: MetaInput): Metadata {
-  const ogImage = image ? `${SITE_URL}${imageUrl(image, 1200)}` : undefined
+  const ogImage = image ? absoluteImageUrl(image, 1200) : undefined
   const catalogPath = /^\/(games|genres|platforms|developers|publishers)(\/|$)/.test(path) || ['/trending', '/mobile-games', '/pc-games', '/console-games'].includes(path)
   const [section, slug] = path.split('/').filter(Boolean)
   const verifiedForPath = section === 'games'
@@ -108,7 +114,7 @@ export const gameJsonLd = (g: Game) => g.catalogStatus !== 'verified' ? null : (
   name: g.title,
   description: g.description,
   url: `${SITE_URL}/games/${g.slug}`,
-  ...(g.image ? { image: `${SITE_URL}${imageUrl(g.image, 1200)}` } : {}),
+  ...(g.image ? { image: absoluteImageUrl(g.image, 1200) } : {}),
   genre: g.genres.map((s) => genres[s].name),
   gamePlatform: g.platforms.map((p) => platforms[p].name),
   author: { '@type': 'Organization', name: g.developer },

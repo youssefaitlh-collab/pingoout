@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
-import { CatalogNotice } from '@/components/CatalogNotice'
 import { isPreviewDeployment, JsonLd, organizationJsonLd, SITE_URL, websiteJsonLd } from '@/lib/seo'
 import './globals.css'
 
@@ -37,7 +36,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd data={websiteJsonLd()} />
         <JsonLd data={organizationJsonLd()} />
         <Header />
-        <CatalogNotice />
         <main id="main" className="flex-1">{children}</main>
         <Footer />
       </body>

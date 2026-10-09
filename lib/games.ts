@@ -52,6 +52,8 @@ export type Game = {
   releaseDate?: string
   /** Only sourced, licensed artwork should be added. Demo artwork stays on demo records. */
   image?: string
+  /** Official trailer metadata and the source used for the displayed thumbnail. */
+  media?: { videoId: string; videoTitle: string; videoSourceUrl: string; imageSourceUrl: string }
   imagePrompt?: string
   features: string[]
   requirements?: { minimum: string[]; recommended: string[] }
