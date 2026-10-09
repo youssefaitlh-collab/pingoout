@@ -8,7 +8,7 @@ export function GameCard({ game, priority = false }: { game: Game; priority?: bo
       <div className="aspect-video overflow-hidden rounded-lg border border-line bg-surface transition-colors duration-200 group-hover:border-primary">
         {game.image ? <img
           src={imageUrl(game.image, 640)}
-          srcSet={`${imageUrl(game.image, 400)} 400w, ${imageUrl(game.image, 640)} 640w`}
+          srcSet={game.image.startsWith('https://') ? undefined : `${imageUrl(game.image, 400)} 400w, ${imageUrl(game.image, 640)} 640w`}
           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
           alt={`${game.title} artwork`}
           width={640}

@@ -41,7 +41,7 @@ export default async function GamePage({ params }: Props) {
       <header className="relative isolate overflow-hidden border-b border-line">
         {game.image && <img
           src={imageUrl(game.image, 1920)}
-          srcSet={`${imageUrl(game.image, 828)} 828w, ${imageUrl(game.image, 1280)} 1280w, ${imageUrl(game.image, 1920)} 1920w`}
+          srcSet={game.image.startsWith('https://') ? undefined : `${imageUrl(game.image, 828)} 828w, ${imageUrl(game.image, 1280)} 1280w, ${imageUrl(game.image, 1920)} 1920w`}
           sizes="100vw"
           alt={`${game.title} artwork`}
           fetchPriority="high"
@@ -74,6 +74,25 @@ export default async function GamePage({ params }: Props) {
           <Block title={game.catalogStatus === 'verified' ? 'About this game' : 'About (sample content)'}>
             <p className="text-[16px] leading-relaxed text-text/90">{game.description}</p>
           </Block>
+          {game.media && <Block title="Official trailer">
+            <div className="overflow-hidden rounded-xl border border-line bg-surface">
+              <div className="aspect-video">
+                <iframe
+                  className="h-full w-full"
+                  src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(game.media.videoId)}`}
+                  title={`${game.title}: ${game.media.videoTitle}`}
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+              <div className="flex flex-wrap justify-between gap-3 p-3 text-sm text-muted">
+                <span>{game.media.videoTitle}</span>
+                <a href={game.media.videoSourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-text">Watch on YouTube ↗</a>
+              </div>
+            </div>
+          </Block>}
           <Block title="Features">
             <ul className="grid gap-2 sm:grid-cols-2">
               {game.features.map((f) => (
