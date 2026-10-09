@@ -2,7 +2,7 @@ import { ListingPage } from '@/components/ListingPage'
 import { byGroup } from '@/lib/games'
 import { buildMetadata } from '@/lib/seo'
 
-const description = 'Games for PlayStation, Xbox and Nintendo Switch.'
+const description = 'Browse game profiles with verified console availability.'
 export const metadata = buildMetadata({ title: 'Console games', description, path: '/console-games' })
 
 export default function ConsoleGames() {

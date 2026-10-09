@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props) {
 
   const titles = publisher.games.slice(0, 3).map((game) => game.title)
   const description = publisher.games.length === 1
-    ? `${publisher.name} publisher of ${titles[0]}. Explore the game, its platforms, genres and official sources on PINGOO.`
+    ? `${publisher.name} is listed as the publisher of ${titles[0]} in a source-checked PINGOO game profile.`
     : `Explore ${publisher.games.length} games listed for publisher ${publisher.name}, including ${titles.join(', ')}.`
 
   return buildMetadata({
@@ -36,7 +36,7 @@ export default async function PublisherPage({ params }: Props) {
     <ListingPage
       eyebrow="Publisher"
       title={`Games published by ${publisher.name}`}
-      description={`Games listed for publisher ${publisher.name}. Browse each game's genres, platforms, and official store links.`}
+      description={`Source-checked game profiles associated with ${publisher.name}.`}
       path={`/publishers/${slug}`}
       games={publisher.games}
       breadcrumbs={[{ name: 'Home', path: '/' }, { name: 'Games', path: '/games' }, { name: publisher.name, path: `/publishers/${slug}` }]}

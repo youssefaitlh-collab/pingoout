@@ -1,17 +1,24 @@
 # PINGOO
 
-PINGOO is a game discovery platform: discover, search and explore games by genre and platform, then go to an official store to get them. PINGOO never hosts game files.
+PINGOO is a game-discovery application built with Next.js App Router, React, and TypeScript. Its catalog separates source-checked entries from retained illustrative demo records. Verified facts link to the sources used and include a last-checked date.
 
 ## Tech
 - Next.js (App Router) + React + TypeScript
 - Tailwind CSS v4 (design tokens in `app/globals.css`)
-- Netlify: hosting, Image CDN (all artwork goes through `/.netlify/images`), Forms (contact)
+- Netlify hosting, image delivery for sourced artwork, and contact forms
 
 ## Run locally
 ```bash
 npm install
-npm run dev   # netlify dev on http://localhost:8889 (needed for Image CDN and Forms emulation)
+npm run dev
 ```
 
-## Status
-The public site is live with a sample catalog in `lib/games.ts`. The next steps (database, admin dashboard, real content, accounts) are in [PLAN.md](PLAN.md).
+## Catalog publication
+- `lib/verified-games.js` contains source-checked entries and field-to-source provenance.
+- `lib/games.ts` defines the catalog model and helpers. `games` contains published records; `allGames` also retains demo entries for direct, noindex legacy routes.
+- `validateCatalog()` checks IDs, slugs, references, requirements/platform consistency, dated sources and source provenance.
+- Do not mark a field verified without an authoritative URL that supports that exact claim. Unknown details should be omitted.
+- See [docs/catalog-verification.md](docs/catalog-verification.md) for the current candidate decisions and limitations.
+
+## Monetization
+There are no advertising scripts, analytics integrations, or affiliate links in the repository. Keep commercial offers separate from factual metadata. Only add approved affiliate destinations with a clear disclosure and appropriate `rel="sponsored"`; review privacy and consent requirements before adding tracking.

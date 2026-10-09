@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { type Game, genres, platforms } from './games'
+import { type Game, entitySlug, genres, platforms, publishedGames } from './games'
 
 export const SITE_NAME = 'PINGOO'
 // Netlify's URL is the canonical production domain in every deploy context.
@@ -23,7 +23,26 @@ type MetaInput = { title: string; description: string; path: string; image?: str
 
 export function buildMetadata({ title, description, path, image, noIndex }: MetaInput): Metadata {
   const ogImage = image ? `${SITE_URL}${imageUrl(image, 1200)}` : undefined
-  const shouldNoIndex = Boolean(noIndex || isPreviewDeployment)
+  const catalogPath = /^\/(games|genres|platforms|developers|publishers)(\/|$)/.test(path) || ['/trending', '/mobile-games', '/pc-games', '/console-games'].includes(path)
+  const [section, slug] = path.split('/').filter(Boolean)
+  const verifiedForPath = section === 'games'
+    ? slug ? publishedGames.some((game) => game.slug === slug) : publishedGames.length > 0
+    : section === 'genres'
+      ? publishedGames.filter((game) => game.genres.includes(slug as Game['genres'][number])).length >= 2
+      : section === 'platforms'
+        ? publishedGames.filter((game) => game.platforms.includes(slug as Game['platforms'][number])).length >= 2
+        : section === 'developers'
+          ? publishedGames.filter((game) => entitySlug(game.developer) === slug).length >= 2
+          : section === 'publishers'
+            ? publishedGames.filter((game) => entitySlug(game.publisher) === slug).length >= 2
+            : section === 'mobile-games'
+              ? publishedGames.filter((game) => game.platforms.some((platform) => platforms[platform].group === 'mobile')).length >= 2
+              : section === 'pc-games'
+                ? publishedGames.filter((game) => game.platforms.includes('pc')).length >= 2
+                : section === 'console-games'
+                  ? publishedGames.filter((game) => game.platforms.some((platform) => platforms[platform].group === 'console')).length >= 2
+            : publishedGames.length > 0
+  const shouldNoIndex = Boolean(noIndex || isPreviewDeployment || (catalogPath && !verifiedForPath))
   return {
     title,
     description,
@@ -74,28 +93,25 @@ export const organizationJsonLd = () => ({
   url: SITE_URL,
 })
 
-export const itemListJsonLd = (list: Game[]) => ({
-  '@context': 'https://schema.org',
-  '@type': 'ItemList',
-  itemListElement: list.map((g, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_URL}/games/${g.slug}`, name: g.title })),
-})
+export const itemListJsonLd = (list: Game[]) => {
+  const verified = list.filter((game) => game.catalogStatus === 'verified')
+  return verified.length ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: verified.map((g, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_URL}/games/${g.slug}`, name: g.title })),
+  } : null
+}
 
-export const gameJsonLd = (g: Game) => ({
+export const gameJsonLd = (g: Game) => g.catalogStatus !== 'verified' ? null : ({
   '@context': 'https://schema.org',
   '@type': 'VideoGame',
   name: g.title,
   description: g.description,
   url: `${SITE_URL}/games/${g.slug}`,
-  image: `${SITE_URL}${imageUrl(g.image, 1200)}`,
+  ...(g.image ? { image: `${SITE_URL}${imageUrl(g.image, 1200)}` } : {}),
   genre: g.genres.map((s) => genres[s].name),
   gamePlatform: g.platforms.map((p) => platforms[p].name),
   author: { '@type': 'Organization', name: g.developer },
   publisher: { '@type': 'Organization', name: g.publisher },
-  datePublished: String(g.releaseYear),
-})
-
-export const faqJsonLd = (faq: { q: string; a: string }[]) => ({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  ...(g.releaseDate ? { datePublished: g.releaseDate } : {}),
 })

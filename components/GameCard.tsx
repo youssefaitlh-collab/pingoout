@@ -6,7 +6,7 @@ export function GameCard({ game, priority = false }: { game: Game; priority?: bo
   return (
     <Link href={`/games/${game.slug}`} className="group block rounded-lg">
       <div className="aspect-video overflow-hidden rounded-lg border border-line bg-surface transition-colors duration-200 group-hover:border-primary">
-        <img
+        {game.image ? <img
           src={imageUrl(game.image, 640)}
           srcSet={`${imageUrl(game.image, 400)} 400w, ${imageUrl(game.image, 640)} 640w`}
           sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
@@ -15,7 +15,7 @@ export function GameCard({ game, priority = false }: { game: Game; priority?: bo
           height={360}
           loading={priority ? 'eager' : 'lazy'}
           className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.04]"
-        />
+        /> : <div className="flex h-full items-center justify-center bg-gradient-to-br from-elevated to-surface px-4 text-center text-sm font-semibold text-muted" aria-hidden="true">{game.title}</div>}
       </div>
       <h3 className="mt-2.5 truncate text-[15px] font-semibold text-text md:text-base">{game.title}</h3>
       <p className="text-[13px] font-medium text-muted">{metaLabel(game)}</p>

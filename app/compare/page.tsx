@@ -40,7 +40,7 @@ function ComparisonTable({ selectedGames }: { selectedGames: Game[] }) {
   const rows: { label: string; value: (game: Game) => React.ReactNode }[] = [
     { label: 'Genres', value: (game) => game.genres.length ? game.genres.map((slug) => <Link key={slug} className="text-primary hover:underline" href={`/genres/${slug}`}>{genres[slug].name}</Link>) : 'Not listed' },
     { label: 'Platforms', value: (game) => game.platforms.length ? game.platforms.map((slug) => <Link key={slug} className="text-primary hover:underline" href={`/platforms/${slug}`}>{platforms[slug].name}</Link>) : 'Not listed' },
-    { label: 'Release year', value: (game) => game.releaseYear ? String(game.releaseYear) : 'Not listed' },
+    { label: 'Release date', value: (game) => game.releaseDate ?? (game.releaseYear ? String(game.releaseYear) : 'Not listed') },
     { label: 'Developer', value: (game) => game.developer || 'Not listed' },
     { label: 'Publisher', value: (game) => game.publisher || 'Not listed' },
     { label: 'Features', value: (game) => game.features.length ? <ul className="list-inside list-disc space-y-1">{game.features.map((feature) => <li key={feature}>{feature}</li>)}</ul> : 'Not listed' },

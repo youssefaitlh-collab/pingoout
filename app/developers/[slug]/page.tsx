@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props) {
 
   const titles = developer.games.slice(0, 3).map((game) => game.title)
   const description = developer.games.length === 1
-    ? `${developer.name} developer of ${titles[0]}. Explore the game, its platforms, genres and official sources on PINGOO.`
+    ? `${developer.name} is listed as the developer of ${titles[0]} in a source-checked PINGOO game profile.`
     : `Explore ${developer.games.length} games listed for developer ${developer.name}, including ${titles.join(', ')}.`
 
   return buildMetadata({
@@ -36,7 +36,7 @@ export default async function DeveloperPage({ params }: Props) {
     <ListingPage
       eyebrow="Developer"
       title={`Games by ${developer.name}`}
-      description={`Games listed for developer ${developer.name}. Browse each game's genres, platforms, and official store links.`}
+      description={`Source-checked game profiles associated with ${developer.name}.`}
       path={`/developers/${slug}`}
       games={developer.games}
       breadcrumbs={[{ name: 'Home', path: '/' }, { name: 'Games', path: '/games' }, { name: developer.name, path: `/developers/${slug}` }]}
