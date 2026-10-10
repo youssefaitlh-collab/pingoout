@@ -4,12 +4,26 @@ import { type Game, entitySlug, genres, platforms, publishedGames } from './game
 export const SITE_NAME = 'PINGOO'
 // Netlify's URL is the canonical production domain in every deploy context.
 // Never silently emit localhost canonicals in a production build.
-const configuredSiteUrl = process.env.URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.DEPLOY_PRIME_URL
+const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : undefined
+const vercelUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : undefined
+
+const configuredSiteUrl =
+  process.env.URL ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  vercelProductionUrl ||
+  vercelUrl ||
+  process.env.DEPLOY_PRIME_URL
 if (process.env.NODE_ENV === 'production' && !configuredSiteUrl) {
   throw new Error('Set URL or NEXT_PUBLIC_SITE_URL before building PINGOO for production.')
 }
 export const SITE_URL = (configuredSiteUrl || 'http://localhost:8889').replace(/\/$/, '')
-export const isPreviewDeployment = Boolean(process.env.CONTEXT && process.env.CONTEXT !== 'production')
+export const isPreviewDeployment = Boolean(
+  (process.env.CONTEXT && process.env.CONTEXT !== 'production') ||
+    (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production')
 
 /** Use Netlify's optimizer when its runtime is present; local Next previews serve source artwork directly. */
 const netlifyImageCdnAvailable = process.env.NETLIFY === 'true' ||
