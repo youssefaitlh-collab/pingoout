@@ -24,6 +24,7 @@ export const SITE_URL = (configuredSiteUrl || 'http://localhost:8889').replace(/
 export const isPreviewDeployment = Boolean(
   (process.env.CONTEXT && process.env.CONTEXT !== 'production') ||
     (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production')
+)
 
 /** Use Netlify's optimizer when its runtime is present; local Next previews serve source artwork directly. */
 const netlifyImageCdnAvailable = process.env.NETLIFY === 'true' ||
